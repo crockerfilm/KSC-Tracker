@@ -704,7 +704,7 @@
 
   <footer>
     <span class="footer-logo">KSC LAUNCH CONTROL v2.0</span>
-    <span>DATA: THESPACEDEVS.COM // THREE.JS ENGINE</span>
+    <span>DATA: <span id="data-source" style="color:var(--glow)">LOADING...</span> // THESPACEDEVS.COM</span>
   </footer>
 </div>
 
@@ -1025,44 +1025,35 @@ let nextLaunchTime = null;
 // Rich fallback data — real upcoming missions (early 2026)
 const MOCK_LAUNCHES = [
   {
-    name: "Starlink Group 12-20",
-    net: new Date(Date.now() + 1.7 * 24 * 3600000).toISOString(),
+    name: "Crew-10 — ISS Expedition",
+    net: new Date(Date.now() + 1.0 * 24 * 3600000).toISOString(),
     status: { abbrev: "Go", name: "Go for Launch" },
-    rocket: { configuration: { name: "Falcon 9 Block 5" } },
-    launch_service_provider: { name: "SpaceX" },
-    pad: { name: "SLC-40, Cape Canaveral SFS", location: { name: "Cape Canaveral, FL" } },
-    mission: { orbit: { name: "Low Earth Orbit", abbrev: "LEO" } }
-  },
-  {
-    name: "GOES-U Weather Satellite",
-    net: new Date(Date.now() + 5.2 * 24 * 3600000).toISOString(),
-    status: { abbrev: "Go", name: "Go for Launch" },
-    rocket: { configuration: { name: "Atlas V 541" } },
-    launch_service_provider: { name: "United Launch Alliance" },
-    pad: { name: "SLC-41, Cape Canaveral SFS", location: { name: "Cape Canaveral, FL" } },
-    mission: { orbit: { name: "Geostationary Transfer Orbit", abbrev: "GTO" } }
-  },
-  {
-    name: "Crew-10 (SpX-10) — ISS",
-    net: new Date(Date.now() + 12.0 * 24 * 3600000).toISOString(),
-    status: { abbrev: "TBC", name: "To Be Confirmed" },
     rocket: { configuration: { name: "Falcon 9 Block 5" } },
     launch_service_provider: { name: "SpaceX / NASA" },
     pad: { name: "LC-39A, Kennedy Space Center", location: { name: "Kennedy Space Center, FL" } },
     mission: { orbit: { name: "International Space Station", abbrev: "ISS" } }
   },
   {
-    name: "NROL-69 — National Recon Office",
-    net: new Date(Date.now() + 18.5 * 24 * 3600000).toISOString(),
-    status: { abbrev: "TBD", name: "To Be Determined" },
-    rocket: { configuration: { name: "Delta IV Heavy" } },
-    launch_service_provider: { name: "United Launch Alliance / NRO" },
-    pad: { name: "SLC-37B, Cape Canaveral SFS", location: { name: "Cape Canaveral, FL" } },
-    mission: { orbit: { name: "Polar Orbit", abbrev: "PO" } }
+    name: "GOES-U — Weather Observatory",
+    net: new Date(Date.now() + 8.2 * 24 * 3600000).toISOString(),
+    status: { abbrev: "Go", name: "Go for Launch" },
+    rocket: { configuration: { name: "Atlas V 541" } },
+    launch_service_provider: { name: "United Launch Alliance / NOAA" },
+    pad: { name: "SLC-41, Cape Canaveral SFS", location: { name: "Cape Canaveral, FL" } },
+    mission: { orbit: { name: "Geostationary Transfer Orbit", abbrev: "GTO" } }
   },
   {
-    name: "Starlink Group 13-5",
-    net: new Date(Date.now() + 22.3 * 24 * 3600000).toISOString(),
+    name: "NROL-107 — National Recon",
+    net: new Date(Date.now() + 14.0 * 24 * 3600000).toISOString(),
+    status: { abbrev: "TBC", name: "To Be Confirmed" },
+    rocket: { configuration: { name: "Delta IV Heavy" } },
+    launch_service_provider: { name: "ULA / NRO" },
+    pad: { name: "SLC-37B, Cape Canaveral SFS", location: { name: "Cape Canaveral, FL" } },
+    mission: { orbit: { name: "Classified Orbit", abbrev: "CLS" } }
+  },
+  {
+    name: "Starlink Group 12-20",
+    net: new Date(Date.now() + 18.5 * 24 * 3600000).toISOString(),
     status: { abbrev: "TBD", name: "To Be Determined" },
     rocket: { configuration: { name: "Falcon 9 Block 5" } },
     launch_service_provider: { name: "SpaceX" },
@@ -1070,8 +1061,8 @@ const MOCK_LAUNCHES = [
     mission: { orbit: { name: "Low Earth Orbit", abbrev: "LEO" } }
   },
   {
-    name: "Europa Clipper — Jupiter Moon Survey",
-    net: new Date(Date.now() + 34.0 * 24 * 3600000).toISOString(),
+    name: "Europa Clipper — Jupiter Survey",
+    net: new Date(Date.now() + 25.0 * 24 * 3600000).toISOString(),
     status: { abbrev: "TBD", name: "To Be Determined" },
     rocket: { configuration: { name: "Falcon Heavy" } },
     launch_service_provider: { name: "SpaceX / NASA JPL" },
@@ -1080,7 +1071,7 @@ const MOCK_LAUNCHES = [
   },
   {
     name: "IM-3 — Lunar Trailblazer",
-    net: new Date(Date.now() + 47.0 * 24 * 3600000).toISOString(),
+    net: new Date(Date.now() + 34.0 * 24 * 3600000).toISOString(),
     status: { abbrev: "TBD", name: "To Be Determined" },
     rocket: { configuration: { name: "Falcon 9 Block 5" } },
     launch_service_provider: { name: "Intuitive Machines / NASA" },
@@ -1089,49 +1080,80 @@ const MOCK_LAUNCHES = [
   },
   {
     name: "SES-26 — Comms Satellite",
-    net: new Date(Date.now() + 58.5 * 24 * 3600000).toISOString(),
+    net: new Date(Date.now() + 46.0 * 24 * 3600000).toISOString(),
     status: { abbrev: "TBD", name: "To Be Determined" },
     rocket: { configuration: { name: "Falcon 9 Block 5" } },
     launch_service_provider: { name: "SpaceX / SES" },
     pad: { name: "SLC-40, Cape Canaveral SFS", location: { name: "Cape Canaveral, FL" } },
     mission: { orbit: { name: "Geostationary Transfer Orbit", abbrev: "GTO" } }
+  },
+  {
+    name: "Starlink Group 13-5",
+    net: new Date(Date.now() + 55.0 * 24 * 3600000).toISOString(),
+    status: { abbrev: "TBD", name: "To Be Determined" },
+    rocket: { configuration: { name: "Falcon 9 Block 5" } },
+    launch_service_provider: { name: "SpaceX" },
+    pad: { name: "SLC-40, Cape Canaveral SFS", location: { name: "Cape Canaveral, FL" } },
+    mission: { orbit: { name: "Low Earth Orbit", abbrev: "LEO" } }
   }
 ];
 
-// Florida launch sites: KSC (loc 27) and Cape Canaveral SFS (loc 27 covers both)
-// Vandenberg = loc 11, excluded
-const FLORIDA_KEYWORDS = ['florida','cape canaveral','kennedy space center','ksc','canaveral'];
+const FLORIDA_KEYWORDS = [
+  'florida', 'cape canaveral', 'kennedy space center',
+  'ksc', 'canaveral', 'slc-40', 'slc-41', 'slc-37',
+  'lc-39', 'patrick', 'ccsfs', 'ccafs', 'cape sfs'
+];
 
 function isFloridaLaunch(launch) {
   const loc = [
     launch.pad && launch.pad.location && launch.pad.location.name,
+    launch.pad && launch.pad.location && launch.pad.location.country_code,
     launch.pad && launch.pad.name,
-    launch.launch_site && launch.launch_site.site_name_long
+    launch.pad && launch.pad.location && launch.pad.location.map_image,
   ].filter(Boolean).join(' ').toLowerCase();
+  // Exclude Vandenberg / California explicitly
+  if (loc.includes('vandenberg') || loc.includes('california') || loc.includes('santa barbara')) return false;
   return FLORIDA_KEYWORDS.some(k => loc.includes(k));
 }
 
-async function fetchLaunches() {
+async function tryFetch(url) {
+  const controller = new AbortController();
+  const timeout = setTimeout(() => controller.abort(), 6000);
   try {
-    const controller = new AbortController();
-    const timeout = setTimeout(() => controller.abort(), 5000);
-    // location__ids=27 = Cape Canaveral / KSC (Florida only)
-    const res = await fetch(
-      'https://ll.thespacedevs.com/2.2.0/launch/upcoming/?limit=20&location__ids=27&format=json',
-      { signal: controller.signal }
-    );
+    const res = await fetch(url, { signal: controller.signal });
     clearTimeout(timeout);
-    if (!res.ok) throw new Error('API error');
-    const data = await res.json();
-    const results = (data.results || []).filter(isFloridaLaunch);
-    if (results.length > 0) {
-      console.log('✓ Live Florida launch data loaded:', results.length, 'launches');
-      return results.slice(0, 10);
-    }
-  } catch (e) {
-    console.log('ℹ Using curated Florida launch manifest (API unreachable)');
+    if (!res.ok) throw new Error('bad status');
+    return await res.json();
+  } catch(e) {
+    clearTimeout(timeout);
+    throw e;
   }
-  return MOCK_LAUNCHES; // already all Florida
+}
+
+async function fetchLaunches() {
+  // Fetch broad upcoming list then filter Florida client-side
+  // Avoids relying on location__ids which can be unreliable
+  const ENDPOINTS = [
+    'https://lldev.thespacedevs.com/2.2.0/launch/upcoming/?limit=40&ordering=net&format=json',
+    'https://ll.thespacedevs.com/2.2.0/launch/upcoming/?limit=40&ordering=net&format=json',
+  ];
+  for (const url of ENDPOINTS) {
+    try {
+      const data = await tryFetch(url);
+      const all = (data.results || []);
+      const florida = all.filter(isFloridaLaunch);
+      if (florida.length > 0) {
+        console.log('✓ Live data:', all.length, 'total,', florida.length, 'Florida launches');
+        document.getElementById('data-source').textContent = 'LIVE DATA';
+        return florida.slice(0, 10);
+      }
+    } catch(e) {
+      console.log('Endpoint failed, trying next...', e.message);
+    }
+  }
+  console.log('ℹ Using curated Florida launch manifest');
+  document.getElementById('data-source').textContent = 'CACHED MANIFEST';
+  return MOCK_LAUNCHES;
 }
 
 function statusClass(status) {
