@@ -618,7 +618,7 @@
       <span class="live-tag">LIVE FEED</span>
     </div>
     <h1>KSC <span>LAUNCH</span><br>CONTROL</h1>
-    <p class="subtitle">// KENNEDY SPACE CENTER — PAD 39A / 39B / SLC-41</p>
+    <p class="subtitle">// KENNEDY SPACE CENTER &amp; CAPE CANAVERAL — FLORIDA ONLY</p>
     <div class="coord-bar">
       <div>LAT <span>28.5729° N</span></div>
       <div>LON <span>80.6490° W</span></div>
@@ -1098,26 +1098,40 @@ const MOCK_LAUNCHES = [
   }
 ];
 
+// Florida launch sites: KSC (loc 27) and Cape Canaveral SFS (loc 27 covers both)
+// Vandenberg = loc 11, excluded
+const FLORIDA_KEYWORDS = ['florida','cape canaveral','kennedy space center','ksc','canaveral'];
+
+function isFloridaLaunch(launch) {
+  const loc = [
+    launch.pad && launch.pad.location && launch.pad.location.name,
+    launch.pad && launch.pad.name,
+    launch.launch_site && launch.launch_site.site_name_long
+  ].filter(Boolean).join(' ').toLowerCase();
+  return FLORIDA_KEYWORDS.some(k => loc.includes(k));
+}
+
 async function fetchLaunches() {
-  // Try live API first (works in browser when served over HTTPS)
   try {
     const controller = new AbortController();
     const timeout = setTimeout(() => controller.abort(), 5000);
+    // location__ids=27 = Cape Canaveral / KSC (Florida only)
     const res = await fetch(
-      'https://ll.thespacedevs.com/2.2.0/launch/upcoming/?limit=10&format=json',
+      'https://ll.thespacedevs.com/2.2.0/launch/upcoming/?limit=20&location__ids=27&format=json',
       { signal: controller.signal }
     );
     clearTimeout(timeout);
     if (!res.ok) throw new Error('API error');
     const data = await res.json();
-    if (data.results && data.results.length > 0) {
-      console.log('✓ Live launch data loaded');
-      return data.results;
+    const results = (data.results || []).filter(isFloridaLaunch);
+    if (results.length > 0) {
+      console.log('✓ Live Florida launch data loaded:', results.length, 'launches');
+      return results.slice(0, 10);
     }
   } catch (e) {
-    console.log('ℹ Using curated launch manifest (API unreachable)');
+    console.log('ℹ Using curated Florida launch manifest (API unreachable)');
   }
-  return MOCK_LAUNCHES;
+  return MOCK_LAUNCHES; // already all Florida
 }
 
 function statusClass(status) {
@@ -1263,7 +1277,7 @@ async function init() {
     listEl.appendChild(card);
   });
 }
- 
+
 init();
 </script>
 </body>
