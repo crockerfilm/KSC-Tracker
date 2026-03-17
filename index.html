@@ -5,719 +5,806 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Cape Canaveral Launch Countdown</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
-<link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;500;700;900&family=IBM+Plex+Mono:wght@300;400;500&family=Space+Grotesk:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Anybody:wght@400;700;900&family=JetBrains+Mono:wght@300;400;500;600&display=swap" rel="stylesheet">
 <style>
   *,*::before,*::after{margin:0;padding:0;box-sizing:border-box}
 
   :root {
-    --bg-deep: #050a14;
-    --bg-card: rgba(12, 22, 45, 0.7);
-    --bg-card-hover: rgba(18, 32, 60, 0.85);
-    --accent-burn: #ff5722;
-    --accent-flame: #ff8a50;
-    --accent-glow: #ffc947;
-    --accent-cool: #26c6da;
-    --accent-cool-dim: rgba(38, 198, 218, 0.15);
-    --text-primary: #e8eaf0;
-    --text-muted: #7a8ba8;
-    --text-dim: #3d506b;
-    --border-subtle: rgba(38, 198, 218, 0.12);
-    --border-active: rgba(255, 87, 34, 0.4);
+    --bg-void: #04080f;
+    --bg-surface: rgba(8, 16, 32, 0.75);
+    --bg-surface-hi: rgba(14, 26, 50, 0.85);
+    --accent-fire: #e84525;
+    --accent-ember: #ff6d3f;
+    --accent-gold: #f0b429;
+    --accent-ice: #00d4ff;
+    --accent-ice-lo: rgba(0, 212, 255, 0.08);
+    --accent-ice-mid: rgba(0, 212, 255, 0.2);
+    --text-hi: #dfe6f0;
+    --text-mid: #6d7f99;
+    --text-lo: #2d3e56;
+    --border-lo: rgba(0, 212, 255, 0.08);
+    --border-mid: rgba(0, 212, 255, 0.18);
+    --border-hot: rgba(232, 69, 37, 0.35);
   }
 
   html { font-size: 16px; scroll-behavior: smooth; }
 
   body {
-    font-family: 'IBM Plex Mono', monospace;
-    background: var(--bg-deep);
-    color: var(--text-primary);
+    font-family: 'JetBrains Mono', monospace;
+    background: var(--bg-void);
+    color: var(--text-hi);
     min-height: 100vh;
     overflow-x: hidden;
-    position: relative;
   }
 
-  /* ── starfield canvas ── */
-  #starfield {
-    position: fixed; inset: 0; z-index: 0;
+  /* ─── starfield ─── */
+  #stars { position: fixed; inset: 0; z-index: 0; pointer-events: none; }
+
+  /* ─── scanline overlay ─── */
+  body::after {
+    content: '';
+    position: fixed; inset: 0; z-index: 9999;
     pointer-events: none;
+    background: repeating-linear-gradient(
+      0deg,
+      transparent,
+      transparent 2px,
+      rgba(0,0,0,0.04) 2px,
+      rgba(0,0,0,0.04) 4px
+    );
   }
 
-  /* ── layout ── */
-  .page-wrap {
+  .wrap {
     position: relative; z-index: 1;
-    max-width: 1060px;
+    max-width: 980px;
     margin: 0 auto;
-    padding: 2rem 1.5rem 4rem;
+    padding: 1.5rem 1.25rem 4rem;
   }
 
-  /* ── header ── */
-  header {
+  /* ─── header ─── */
+  .hdr {
     text-align: center;
-    padding: 3rem 0 1rem;
+    padding: 2.5rem 0 0.5rem;
+    animation: fadeSlide 0.8s ease both;
   }
-  .site-tag {
-    font-family: 'IBM Plex Mono', monospace;
-    font-size: 0.7rem;
-    letter-spacing: 0.35em;
-    text-transform: uppercase;
-    color: var(--accent-cool);
-    opacity: 0.8;
-    margin-bottom: 0.5rem;
+  @keyframes fadeSlide {
+    from { opacity: 0; transform: translateY(-12px); }
+    to { opacity: 1; transform: translateY(0); }
   }
-  .site-title {
-    font-family: 'Orbitron', sans-serif;
+  .hdr-coord {
+    font-size: 0.6rem;
+    letter-spacing: 0.4em;
+    color: var(--accent-ice);
+    opacity: 0.6;
+    margin-bottom: 0.6rem;
+  }
+  .hdr h1 {
+    font-family: 'Anybody', sans-serif;
     font-weight: 900;
-    font-size: clamp(1.6rem, 5vw, 2.8rem);
-    letter-spacing: 0.06em;
-    background: linear-gradient(135deg, var(--accent-glow) 0%, var(--accent-burn) 50%, var(--accent-flame) 100%);
+    font-size: clamp(1.5rem, 5vw, 2.6rem);
+    letter-spacing: 0.04em;
+    text-transform: uppercase;
+    background: linear-gradient(135deg, var(--accent-gold), var(--accent-fire), var(--accent-ember));
     -webkit-background-clip: text;
     -webkit-text-fill-color: transparent;
     background-clip: text;
     line-height: 1.15;
   }
-  .site-sub {
-    font-size: 0.78rem;
-    color: var(--text-muted);
-    margin-top: 0.6rem;
-    letter-spacing: 0.04em;
+  .hdr-sub {
+    font-size: 0.72rem;
+    color: var(--text-mid);
+    margin-top: 0.5rem;
   }
-  .site-sub span { color: var(--accent-cool); }
+  .hdr-sub em { color: var(--accent-ice); font-style: normal; }
 
-  /* ── hero countdown ── */
+  /* ─── status bar ─── */
+  .status-bar {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.8rem;
+    margin: 1.5rem 0 0.5rem;
+    font-size: 0.62rem;
+    color: var(--text-mid);
+    letter-spacing: 0.08em;
+    animation: fadeSlide 0.8s 0.15s ease both;
+  }
+  .status-dot {
+    width: 6px; height: 6px;
+    border-radius: 50%;
+    background: var(--accent-ice);
+    animation: breathe 3s ease-in-out infinite;
+  }
+  .status-dot.error { background: var(--accent-fire); animation: none; }
+  .status-dot.loading { background: var(--accent-gold); }
+  @keyframes breathe {
+    0%,100% { opacity: 0.4; box-shadow: 0 0 0 0 rgba(0,212,255,0.3); }
+    50% { opacity: 1; box-shadow: 0 0 6px 2px rgba(0,212,255,0.15); }
+  }
+
+  /* ─── hero card ─── */
   .hero {
-    margin: 2.5rem 0 3rem;
-    padding: 2.5rem 2rem 2rem;
-    background: var(--bg-card);
-    border: 1px solid var(--border-active);
-    border-radius: 8px;
+    margin: 1.5rem 0 2.5rem;
+    padding: 2rem 1.8rem 1.6rem;
+    background: var(--bg-surface);
+    border: 1px solid var(--border-hot);
+    border-radius: 6px;
     position: relative;
     overflow: hidden;
+    animation: fadeSlide 0.8s 0.25s ease both;
   }
   .hero::before {
     content: '';
     position: absolute;
     top: 0; left: 0; right: 0;
     height: 2px;
-    background: linear-gradient(90deg, transparent, var(--accent-burn), var(--accent-flame), var(--accent-glow), var(--accent-flame), var(--accent-burn), transparent);
-    animation: shimmer 3s ease-in-out infinite;
+    background: linear-gradient(90deg, transparent 5%, var(--accent-fire), var(--accent-ember), var(--accent-gold), var(--accent-ember), var(--accent-fire), transparent 95%);
+    animation: barPulse 4s ease-in-out infinite;
   }
-  @keyframes shimmer {
-    0%,100% { opacity: 0.5; }
+  @keyframes barPulse {
+    0%,100% { opacity: 0.4; }
     50% { opacity: 1; }
   }
-  .hero-label {
-    font-size: 0.65rem;
-    letter-spacing: 0.3em;
+  .hero-tag {
+    font-size: 0.58rem;
+    letter-spacing: 0.35em;
     text-transform: uppercase;
-    color: var(--accent-burn);
-    margin-bottom: 0.4rem;
+    color: var(--accent-fire);
+    margin-bottom: 0.5rem;
   }
-  .hero-mission {
-    font-family: 'Orbitron', sans-serif;
+  .hero-name {
+    font-family: 'Anybody', sans-serif;
     font-weight: 700;
-    font-size: clamp(1.1rem, 3vw, 1.6rem);
-    color: var(--text-primary);
-    margin-bottom: 0.25rem;
+    font-size: clamp(1rem, 3vw, 1.5rem);
+    color: var(--text-hi);
+    margin-bottom: 0.2rem;
   }
-  .hero-details {
-    font-size: 0.75rem;
-    color: var(--text-muted);
-    margin-bottom: 2rem;
-    line-height: 1.6;
-  }
-  .hero-details .tag {
-    display: inline-block;
-    background: var(--accent-cool-dim);
-    color: var(--accent-cool);
-    padding: 0.15em 0.55em;
-    border-radius: 3px;
+  .hero-meta {
     font-size: 0.68rem;
-    margin-right: 0.4rem;
+    color: var(--text-mid);
+    line-height: 1.7;
+    margin-bottom: 1.8rem;
+  }
+  .chip {
+    display: inline-block;
+    background: var(--accent-ice-lo);
+    color: var(--accent-ice);
+    padding: 0.12em 0.5em;
+    border-radius: 3px;
+    font-size: 0.63rem;
+    margin-right: 0.35rem;
     vertical-align: middle;
+    border: 1px solid var(--border-lo);
+  }
+  .chip.hot {
+    background: rgba(232,69,37,0.08);
+    color: var(--accent-ember);
+    border-color: rgba(232,69,37,0.15);
   }
 
-  /* countdown digits */
-  .countdown-row {
+  /* countdown */
+  .cd-row {
     display: flex;
     justify-content: center;
-    gap: 1.2rem;
+    align-items: flex-start;
+    gap: 0.8rem;
     flex-wrap: wrap;
   }
-  .cd-unit {
-    text-align: center;
-    min-width: 80px;
-  }
+  .cd-unit { text-align: center; min-width: 72px; }
   .cd-val {
-    font-family: 'Orbitron', sans-serif;
+    font-family: 'Anybody', sans-serif;
     font-weight: 900;
-    font-size: clamp(2.2rem, 6vw, 3.8rem);
+    font-size: clamp(2rem, 6vw, 3.6rem);
     line-height: 1;
-    color: var(--text-primary);
-    position: relative;
+    color: var(--text-hi);
+    font-variant-numeric: tabular-nums;
   }
-  .cd-val::after {
-    content: '';
-    position: absolute;
-    bottom: -4px; left: 10%; right: 10%;
-    height: 2px;
-    background: linear-gradient(90deg, transparent, var(--accent-burn), transparent);
-    opacity: 0.5;
-  }
-  .cd-label {
-    font-size: 0.6rem;
+  .cd-lbl {
+    font-size: 0.55rem;
     letter-spacing: 0.25em;
     text-transform: uppercase;
-    color: var(--text-muted);
-    margin-top: 0.6rem;
+    color: var(--text-mid);
+    margin-top: 0.5rem;
   }
-  .cd-sep {
-    font-family: 'Orbitron', sans-serif;
+  .cd-colon {
+    font-family: 'Anybody', sans-serif;
     font-weight: 700;
-    font-size: clamp(2rem, 5vw, 3rem);
-    color: var(--accent-burn);
-    align-self: flex-start;
-    margin-top: 0.1em;
+    font-size: clamp(1.6rem, 4vw, 2.6rem);
+    color: var(--accent-fire);
+    opacity: 0.7;
     animation: blink 1s step-end infinite;
   }
-  @keyframes blink {
-    50% { opacity: 0.2; }
-  }
+  @keyframes blink { 50% { opacity: 0.15; } }
 
-  .hero-status {
+  .hero-desc {
     text-align: center;
-    margin-top: 1.5rem;
-    font-size: 0.72rem;
-    color: var(--text-muted);
+    font-size: 0.68rem;
+    color: var(--text-mid);
+    margin-top: 1.4rem;
+    line-height: 1.55;
+    max-width: 600px;
+    margin-left: auto;
+    margin-right: auto;
   }
-  .hero-status .live-dot {
-    display: inline-block;
-    width: 6px; height: 6px;
-    background: var(--accent-burn);
-    border-radius: 50%;
-    margin-right: 0.4rem;
-    vertical-align: middle;
-    animation: pulse-dot 2s ease-in-out infinite;
-  }
-  @keyframes pulse-dot {
-    0%,100% { box-shadow: 0 0 0 0 rgba(255,87,34,0.5); }
-    50% { box-shadow: 0 0 0 6px rgba(255,87,34,0); }
-  }
-
-  /* past launch notice */
-  .past-notice {
+  .hero-tbd {
     text-align: center;
-    padding: 1.5rem;
-    font-size: 0.85rem;
-    color: var(--accent-glow);
+    padding: 1.2rem 0;
+    font-family: 'Anybody', sans-serif;
+    font-weight: 700;
+    font-size: 1.1rem;
+    color: var(--accent-gold);
+    letter-spacing: 0.1em;
   }
 
-  /* ── section titles ── */
-  .section-head {
+  /* ─── section head ─── */
+  .sec {
     display: flex;
     align-items: center;
-    gap: 0.8rem;
-    margin-bottom: 1.2rem;
+    gap: 0.7rem;
+    margin-bottom: 1rem;
+    animation: fadeSlide 0.8s 0.4s ease both;
   }
-  .section-head h2 {
-    font-family: 'Orbitron', sans-serif;
+  .sec h2 {
+    font-family: 'Anybody', sans-serif;
     font-weight: 700;
-    font-size: 0.85rem;
-    letter-spacing: 0.12em;
+    font-size: 0.75rem;
+    letter-spacing: 0.15em;
     text-transform: uppercase;
-    color: var(--accent-cool);
+    color: var(--accent-ice);
     white-space: nowrap;
   }
-  .section-head::after {
+  .sec::after {
     content: '';
     flex: 1;
     height: 1px;
-    background: linear-gradient(90deg, var(--border-subtle), transparent);
+    background: linear-gradient(90deg, var(--border-mid), transparent 80%);
   }
-
-  /* ── launch list ── */
-  .launch-list { display: flex; flex-direction: column; gap: 0.6rem; }
-
-  .launch-card {
-    display: grid;
-    grid-template-columns: 100px 1fr auto;
-    gap: 1rem;
-    align-items: center;
-    padding: 1rem 1.2rem;
-    background: var(--bg-card);
-    border: 1px solid var(--border-subtle);
-    border-radius: 6px;
-    transition: all 0.25s ease;
-    cursor: default;
-  }
-  .launch-card:hover {
-    background: var(--bg-card-hover);
-    border-color: rgba(38,198,218,0.25);
-    transform: translateX(3px);
-  }
-  .launch-card.is-next {
-    border-color: var(--border-active);
-    background: rgba(255,87,34,0.04);
-  }
-
-  .lc-date {
-    text-align: center;
-  }
-  .lc-date .month {
+  .sec .count {
     font-size: 0.6rem;
-    letter-spacing: 0.2em;
-    text-transform: uppercase;
-    color: var(--accent-cool);
-  }
-  .lc-date .day {
-    font-family: 'Orbitron', sans-serif;
-    font-weight: 700;
-    font-size: 1.6rem;
-    color: var(--text-primary);
-    line-height: 1.1;
-  }
-  .lc-date .time {
-    font-size: 0.65rem;
-    color: var(--text-muted);
-    margin-top: 0.1rem;
-  }
-  .lc-date .tbd {
-    font-family: 'Orbitron', sans-serif;
-    font-weight: 700;
-    font-size: 1rem;
-    color: var(--text-dim);
-    line-height: 1.1;
-  }
-
-  .lc-info {}
-  .lc-mission {
-    font-family: 'Orbitron', sans-serif;
-    font-weight: 600;
-    font-size: 0.82rem;
-    color: var(--text-primary);
-    margin-bottom: 0.25rem;
-  }
-  .lc-desc {
-    font-size: 0.7rem;
-    color: var(--text-muted);
-    line-height: 1.45;
-    max-width: 520px;
-  }
-
-  .lc-rocket {
-    text-align: right;
+    color: var(--text-lo);
     white-space: nowrap;
   }
-  .lc-rocket .name {
-    font-size: 0.72rem;
-    font-weight: 500;
-    color: var(--text-primary);
+
+  /* ─── launch list ─── */
+  .list { display: flex; flex-direction: column; gap: 0.5rem; }
+
+  .card {
+    display: grid;
+    grid-template-columns: 90px 1fr auto;
+    gap: 0.8rem;
+    align-items: center;
+    padding: 0.9rem 1.1rem;
+    background: var(--bg-surface);
+    border: 1px solid var(--border-lo);
+    border-radius: 5px;
+    transition: all 0.2s ease;
+    animation: cardIn 0.5s ease both;
   }
-  .lc-rocket .pad {
+  @keyframes cardIn {
+    from { opacity: 0; transform: translateY(8px); }
+    to { opacity: 1; transform: translateY(0); }
+  }
+  .card:hover {
+    background: var(--bg-surface-hi);
+    border-color: var(--border-mid);
+    transform: translateX(2px);
+  }
+  .card.next {
+    border-color: var(--border-hot);
+    background: rgba(232, 69, 37, 0.03);
+  }
+
+  .c-date { text-align: center; }
+  .c-date .mo {
+    font-size: 0.55rem;
+    letter-spacing: 0.2em;
+    text-transform: uppercase;
+    color: var(--accent-ice);
+  }
+  .c-date .dy {
+    font-family: 'Anybody', sans-serif;
+    font-weight: 700;
+    font-size: 1.5rem;
+    color: var(--text-hi);
+    line-height: 1.1;
+  }
+  .c-date .tm {
     font-size: 0.6rem;
-    color: var(--text-dim);
-    margin-top: 0.15rem;
+    color: var(--text-mid);
+    margin-top: 0.1rem;
   }
-  .lc-rocket .provider {
-    font-size: 0.58rem;
+  .c-date .tbd-marker {
+    font-family: 'Anybody', sans-serif;
+    font-weight: 700;
+    font-size: 0.9rem;
+    color: var(--text-lo);
+  }
+
+  .c-info {}
+  .c-name {
+    font-family: 'Anybody', sans-serif;
+    font-weight: 700;
+    font-size: 0.78rem;
+    color: var(--text-hi);
+    margin-bottom: 0.2rem;
+  }
+  .c-desc {
+    font-size: 0.65rem;
+    color: var(--text-mid);
+    line-height: 1.4;
+    max-width: 480px;
+    display: -webkit-box;
+    -webkit-line-clamp: 2;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+  }
+
+  .c-rocket { text-align: right; white-space: nowrap; }
+  .c-rocket .rk {
+    font-size: 0.7rem;
+    font-weight: 500;
+    color: var(--text-hi);
+  }
+  .c-rocket .pad {
+    font-size: 0.56rem;
+    color: var(--text-lo);
+    margin-top: 0.1rem;
+  }
+  .c-rocket .prov {
+    font-size: 0.52rem;
     letter-spacing: 0.15em;
     text-transform: uppercase;
-    color: var(--accent-cool);
-    opacity: 0.7;
-    margin-top: 0.3rem;
+    color: var(--accent-ice);
+    opacity: 0.6;
+    margin-top: 0.25rem;
   }
 
-  /* ── footer ── */
+  /* ─── loading / error ─── */
+  .loader {
+    text-align: center;
+    padding: 3rem 1rem;
+    color: var(--text-mid);
+    font-size: 0.75rem;
+  }
+  .loader .spinner {
+    width: 28px; height: 28px;
+    border: 2px solid var(--border-lo);
+    border-top-color: var(--accent-ice);
+    border-radius: 50%;
+    margin: 0 auto 1rem;
+    animation: spin 0.8s linear infinite;
+  }
+  @keyframes spin { to { transform: rotate(360deg); } }
+
+  .err-msg {
+    text-align: center;
+    padding: 2rem 1rem;
+    font-size: 0.72rem;
+    color: var(--accent-ember);
+    line-height: 1.6;
+  }
+  .err-msg button {
+    margin-top: 0.8rem;
+    background: transparent;
+    border: 1px solid var(--border-hot);
+    color: var(--accent-ember);
+    font-family: inherit;
+    font-size: 0.68rem;
+    padding: 0.4em 1.2em;
+    border-radius: 3px;
+    cursor: pointer;
+    transition: background 0.2s;
+  }
+  .err-msg button:hover { background: rgba(232,69,37,0.1); }
+
+  /* ─── footer ─── */
   footer {
     text-align: center;
-    margin-top: 4rem;
-    padding: 2rem 0;
-    border-top: 1px solid var(--border-subtle);
-    font-size: 0.65rem;
-    color: var(--text-dim);
-    line-height: 1.7;
+    margin-top: 3rem;
+    padding: 1.5rem 0;
+    border-top: 1px solid var(--border-lo);
+    font-size: 0.58rem;
+    color: var(--text-lo);
+    line-height: 1.8;
   }
-  footer a {
-    color: var(--accent-cool);
-    text-decoration: none;
-    opacity: 0.7;
-  }
+  footer a { color: var(--accent-ice); text-decoration: none; opacity: 0.6; }
+  footer a:hover { opacity: 1; }
 
-  /* ── responsive ── */
+  /* ─── responsive ─── */
   @media (max-width: 640px) {
-    .launch-card {
-      grid-template-columns: 70px 1fr;
-      gap: 0.7rem;
+    .card {
+      grid-template-columns: 64px 1fr;
+      gap: 0.6rem;
     }
-    .lc-rocket {
+    .c-rocket {
       grid-column: 1 / -1;
       text-align: left;
-      padding-left: 70px;
-      margin-top: -0.3rem;
+      padding-left: 64px;
+      margin-top: -0.2rem;
     }
-    .countdown-row { gap: 0.6rem; }
-    .cd-unit { min-width: 60px; }
-    .hero { padding: 1.8rem 1.2rem 1.5rem; }
+    .cd-row { gap: 0.5rem; }
+    .cd-unit { min-width: 56px; }
+    .hero { padding: 1.5rem 1rem 1.2rem; }
   }
 </style>
 </head>
 <body>
 
-<canvas id="starfield"></canvas>
+<canvas id="stars"></canvas>
 
-<div class="page-wrap">
+<div class="wrap">
+  <div class="hdr">
+    <div class="hdr-coord">28.3922&deg; N &middot; 80.6077&deg; W</div>
+    <h1>Cape Canaveral<br>Launch Countdown</h1>
+    <p class="hdr-sub">Live data from <em>Cape Canaveral SFS</em> &amp; <em>Kennedy Space Center</em></p>
+  </div>
 
-  <header>
-    <div class="site-tag">28.3922° N &bull; 80.6077° W</div>
-    <h1 class="site-title">CAPE CANAVERAL<br>LAUNCH COUNTDOWN</h1>
-    <p class="site-sub">Next launch from <span>Cape Canaveral SFS</span> &amp; <span>Kennedy Space Center</span></p>
-  </header>
+  <div class="status-bar" id="status">
+    <span class="status-dot loading"></span>
+    <span id="status-text">Fetching launch data...</span>
+  </div>
 
-  <!-- Hero countdown filled by JS -->
-  <div class="hero" id="hero"></div>
+  <div id="hero">
+    <div class="loader"><div class="spinner"></div>Acquiring telemetry...</div>
+  </div>
 
-  <div class="section-head"><h2>Upcoming Launches</h2></div>
-  <div class="launch-list" id="launch-list"></div>
+  <div class="sec">
+    <h2>Upcoming Launches</h2>
+    <span class="count" id="launch-count"></span>
+  </div>
+  <div class="list" id="list">
+    <div class="loader"><div class="spinner"></div>Loading manifest...</div>
+  </div>
 
   <footer>
-    Data sourced from Spaceflight Now, Orlando Sentinel &amp; RocketLaunch.org<br>
-    Last updated Mar 17, 2026 &bull; Launch times subject to change
+    Data via <a href="https://thespacedevs.com/llapi" target="_blank" rel="noopener">Launch Library 2 API</a> (The Space Devs)<br>
+    Auto-refreshes every 10 minutes &middot; Times shown in your local timezone
   </footer>
-
 </div>
 
 <script>
-// ── Launch data (Cape Canaveral & KSC only) ──
-const launches = [
-  {
-    mission: "Starlink 10-46",
-    date: new Date("2026-03-17T10:26:00Z"),
-    dateLabel: "Mar 17",
-    time: "6:26a EDT",
-    rocket: "Falcon 9",
-    provider: "SpaceX",
-    pad: "SLC-40",
-    desc: "29 Starlink V2 Mini satellites to LEO. Booster B1090 (11th flight) landing on ASOG.",
-    tbd: false
-  },
-  {
-    mission: "Starlink 10-33",
-    date: new Date("2026-03-19T10:35:00Z"),
-    dateLabel: "Mar 19",
-    time: "6:35a EDT",
-    rocket: "Falcon 9",
-    provider: "SpaceX",
-    pad: "SLC-40",
-    desc: "29 Starlink V2 Mini satellites to LEO. Booster B1077 (27th flight) landing on JRTI.",
-    tbd: false
-  },
-  {
-    mission: "Starlink 10-43",
-    date: new Date("2026-03-22T14:43:00Z"),
-    dateLabel: "Mar 22",
-    time: "10:43a EDT",
-    rocket: "Falcon 9",
-    provider: "SpaceX",
-    pad: "SLC-40",
-    desc: "29 Starlink V2 Mini Optimized satellites to low Earth orbit.",
-    tbd: false
-  },
-  {
-    mission: "BlueBird Block 2 #7",
-    date: null,
-    dateLabel: "Mar",
-    time: null,
-    rocket: "New Glenn",
-    provider: "Blue Origin",
-    pad: "LC-36",
-    desc: "AST SpaceMobile next-gen satellite to LEO. Third New Glenn flight ever.",
-    tbd: true,
-    sortDate: new Date("2026-03-25T12:00:00Z")
-  },
-  {
-    mission: "GPS III SV10",
-    date: null,
-    dateLabel: "Mar",
-    time: null,
-    rocket: "Vulcan",
-    provider: "ULA",
-    pad: "SLC-41",
-    desc: "Tenth and final GPS III navigation satellite to MEO.",
-    tbd: true,
-    sortDate: new Date("2026-03-28T12:00:00Z")
-  },
-  {
-    mission: "Artemis 2",
-    date: new Date("2026-04-01T22:24:00Z"),
-    dateLabel: "Apr 1",
-    time: "6:24p EDT",
-    rocket: "SLS",
-    provider: "NASA",
-    pad: "LC-39B, KSC",
-    desc: "First crewed Artemis flight. Crew: Wiseman, Glover, Koch, Hansen. Lunar flyby and Pacific splashdown.",
-    tbd: false
-  },
-  {
-    mission: "Starliner-1 (Uncrewed)",
-    date: null,
-    dateLabel: "Apr",
-    time: null,
-    rocket: "Atlas V",
-    provider: "ULA / Boeing",
-    pad: "SLC-41",
-    desc: "Uncrewed cargo flight to ISS testing post-CFT modifications to Starliner.",
-    tbd: true,
-    sortDate: new Date("2026-04-15T12:00:00Z")
-  },
-  {
-    mission: "ViaSat-3 F3",
-    date: null,
-    dateLabel: "Late Apr",
-    time: null,
-    rocket: "Falcon Heavy",
-    provider: "SpaceX",
-    pad: "LC-39A, KSC",
-    desc: "First Falcon Heavy launch since 2024. 11th Falcon Heavy mission overall.",
-    tbd: true,
-    sortDate: new Date("2026-04-25T12:00:00Z")
-  },
-  {
-    mission: "CRS-34 (ISS Resupply)",
-    date: null,
-    dateLabel: "May",
-    time: null,
-    rocket: "Falcon 9",
-    provider: "SpaceX",
-    pad: "SLC-40",
-    desc: "34th commercial resupply mission to the ISS via Cargo Dragon 2.",
-    tbd: true,
-    sortDate: new Date("2026-05-15T12:00:00Z")
-  },
-  {
-    mission: "NSSL: NGO-1",
-    date: null,
-    dateLabel: "May",
-    time: null,
-    rocket: "Vulcan Centaur",
-    provider: "ULA",
-    pad: "SLC-41",
-    desc: "First Next Gen Overhead Persistent Infrared geostationary missile warning satellite.",
-    tbd: true,
-    sortDate: new Date("2026-05-20T12:00:00Z")
-  },
-  {
-    mission: "Amazon Leo - Vulcan 1",
-    date: null,
-    dateLabel: "Q2",
-    time: null,
-    rocket: "Vulcan VC6L",
-    provider: "ULA / Amazon",
-    pad: "SLC-41",
-    desc: "First Vulcan mission for Amazon's LEO broadband constellation (formerly Project Kuiper). 44 satellites.",
-    tbd: true,
-    sortDate: new Date("2026-06-01T12:00:00Z")
-  },
-  {
-    mission: "Globalstar FM15+",
-    date: null,
-    dateLabel: "H1",
-    time: null,
-    rocket: "Falcon 9",
-    provider: "SpaceX",
-    pad: "SLC-40",
-    desc: "New 3rd-gen Globalstar mobile communications satellites to replenish LEO constellation.",
-    tbd: true,
-    sortDate: new Date("2026-06-15T12:00:00Z")
-  },
-  {
-    mission: "CRS-35 (ISS Resupply)",
-    date: null,
-    dateLabel: "Aug",
-    time: null,
-    rocket: "Falcon 9",
-    provider: "SpaceX",
-    pad: "SLC-40",
-    desc: "35th commercial resupply mission to the ISS via Cargo Dragon 2.",
-    tbd: true,
-    sortDate: new Date("2026-08-15T12:00:00Z")
-  },
-  {
-    mission: "Dream Chaser 1",
-    date: null,
-    dateLabel: "Q4",
-    time: null,
-    rocket: "Vulcan Centaur",
-    provider: "ULA / Sierra Space",
-    pad: "SLC-41",
-    desc: "First Dream Chaser flight to space. Lifting body cargo vehicle for ISS resupply with runway landing.",
-    tbd: true,
-    sortDate: new Date("2026-10-15T12:00:00Z")
-  }
-];
+// ═══════════════════════════════════════════
+//  CONFIG
+// ═══════════════════════════════════════════
+const API = 'https://ll.thespacedevs.com/2.2.0/launch/upcoming/';
+const LOCATION_IDS = [12, 27]; // 12=Cape Canaveral SFS, 27=Kennedy Space Center
+const REFRESH_MS = 10 * 60 * 1000; // 10 min
+const CACHE_KEY = 'cc_launches_cache';
+const CACHE_TTL = 8 * 60 * 1000; // 8 min cache validity
 
-// ── Countdown logic ──
-const now = () => new Date();
+let launches = [];
+let nextLaunch = null;
+let cdInterval = null;
 
-function getNextLaunch() {
-  const current = now();
-  for (const l of launches) {
-    if (!l.tbd && l.date > current) return l;
-  }
-  // If all dated launches have passed, find first TBD
-  return launches.find(l => l.tbd) || launches[launches.length - 1];
-}
+// ═══════════════════════════════════════════
+//  API FETCH
+// ═══════════════════════════════════════════
+async function fetchLaunches() {
+  setStatus('loading', 'Fetching launch data...');
 
-function timeDelta(target) {
-  const diff = target - now();
-  if (diff <= 0) return { d: 0, h: 0, m: 0, s: 0, past: true };
-  const s = Math.floor(diff / 1000) % 60;
-  const m = Math.floor(diff / 60000) % 60;
-  const h = Math.floor(diff / 3600000) % 24;
-  const d = Math.floor(diff / 86400000);
-  return { d, h, m, s, past: false };
-}
-
-function pad(n) { return String(n).padStart(2, '0'); }
-
-function renderHero() {
-  const next = getNextLaunch();
-  const hero = document.getElementById('hero');
-
-  if (next.tbd) {
-    hero.innerHTML = `
-      <div class="hero-label">NEXT CAPE CANAVERAL LAUNCH</div>
-      <div class="hero-mission">${next.mission}</div>
-      <div class="hero-details">
-        <span class="tag">${next.rocket}</span>
-        <span class="tag">${next.provider}</span>
-        ${next.pad}
-      </div>
-      <div class="past-notice">Launch date TBD &mdash; check back for updates</div>
-      <div class="hero-details" style="text-align:center">${next.desc}</div>
-    `;
+  // Check cache first
+  const cached = loadCache();
+  if (cached) {
+    launches = cached;
+    onDataReady();
+    // Still refresh in background if cache is getting stale
+    refreshInBackground();
     return;
   }
 
-  hero.innerHTML = `
-    <div class="hero-label">NEXT CAPE CANAVERAL LAUNCH</div>
-    <div class="hero-mission">${next.mission}</div>
-    <div class="hero-details">
-      <span class="tag">${next.rocket}</span>
-      <span class="tag">${next.provider}</span>
-      <span class="tag">${next.pad}</span>
-      ${next.date.toLocaleDateString('en-US', { weekday: 'long', month: 'long', day: 'numeric', year: 'numeric' })}
-      &bull; ${next.time}
+  try {
+    // Fetch from both Cape Canaveral (12) and Kennedy Space Center (27)
+    const url = `${API}?limit=50&mode=detailed`;
+    const res = await fetch(url);
+    if (!res.ok) throw new Error(`API returned ${res.status}`);
+    const data = await res.json();
+
+    // Filter for Cape Canaveral & KSC
+    const filtered = (data.results || []).filter(l => {
+      const locName = l.pad?.location?.name || '';
+      return locName.includes('Cape Canaveral') ||
+             locName.includes('Kennedy') ||
+             locName.includes('CCSFS') ||
+             locName.includes('KSC');
+    });
+
+    if (filtered.length === 0) {
+      // Fallback: try with location filter
+      const url2 = `${API}?location__ids=12,27&limit=30&mode=detailed`;
+      const res2 = await fetch(url2);
+      if (res2.ok) {
+        const data2 = await res2.json();
+        launches = (data2.results || []);
+      } else {
+        launches = [];
+      }
+    } else {
+      launches = filtered;
+    }
+
+    saveCache(launches);
+    onDataReady();
+  } catch (err) {
+    console.error('Fetch error:', err);
+    // Try cache even if expired
+    const stale = loadCache(true);
+    if (stale) {
+      launches = stale;
+      onDataReady();
+      setStatus('ok', `Using cached data (live fetch failed)`);
+    } else {
+      setStatus('error', 'Failed to load launch data');
+      document.getElementById('hero').innerHTML = `
+        <div class="err-msg">
+          Could not reach the Launch Library API.<br>
+          This can happen due to rate limiting (15 req/hr on free tier).
+          <br><button onclick="fetchLaunches()">Retry</button>
+        </div>`;
+      document.getElementById('list').innerHTML = '';
+    }
+  }
+}
+
+async function refreshInBackground() {
+  try {
+    const url = `${API}?limit=50&mode=detailed`;
+    const res = await fetch(url);
+    if (!res.ok) return;
+    const data = await res.json();
+    const filtered = (data.results || []).filter(l => {
+      const locName = l.pad?.location?.name || '';
+      return locName.includes('Cape Canaveral') ||
+             locName.includes('Kennedy') ||
+             locName.includes('CCSFS') ||
+             locName.includes('KSC');
+    });
+    if (filtered.length > 0) {
+      launches = filtered;
+      saveCache(launches);
+      onDataReady();
+    }
+  } catch (e) { /* silent */ }
+}
+
+// ═══════════════════════════════════════════
+//  CACHE
+// ═══════════════════════════════════════════
+function saveCache(data) {
+  try {
+    localStorage.setItem(CACHE_KEY, JSON.stringify({ ts: Date.now(), data }));
+  } catch (e) {}
+}
+
+function loadCache(allowStale = false) {
+  try {
+    const raw = localStorage.getItem(CACHE_KEY);
+    if (!raw) return null;
+    const { ts, data } = JSON.parse(raw);
+    if (!allowStale && (Date.now() - ts > CACHE_TTL)) return null;
+    return data;
+  } catch (e) { return null; }
+}
+
+// ═══════════════════════════════════════════
+//  STATUS
+// ═══════════════════════════════════════════
+function setStatus(type, text) {
+  const dot = document.querySelector('.status-dot');
+  const txt = document.getElementById('status-text');
+  dot.className = 'status-dot' + (type === 'error' ? ' error' : type === 'loading' ? ' loading' : '');
+  txt.textContent = text;
+}
+
+// ═══════════════════════════════════════════
+//  RENDER
+// ═══════════════════════════════════════════
+function onDataReady() {
+  const now = new Date();
+  // Sort by NET date
+  launches.sort((a, b) => new Date(a.net) - new Date(b.net));
+
+  // Find next launch (in the future)
+  nextLaunch = launches.find(l => new Date(l.net) > now) || launches[0];
+
+  renderHero();
+  renderList();
+
+  const localTime = new Date().toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit' });
+  setStatus('ok', `Live \u00b7 ${launches.length} launches loaded \u00b7 Updated ${localTime}`);
+}
+
+function renderHero() {
+  const el = document.getElementById('hero');
+  if (!nextLaunch) {
+    el.innerHTML = '<div class="err-msg">No upcoming launches found.</div>';
+    return;
+  }
+
+  const l = nextLaunch;
+  const net = new Date(l.net);
+  const rocket = l.rocket?.configuration?.full_name || l.rocket?.configuration?.name || 'Unknown';
+  const provider = l.launch_service_provider?.name || '';
+  const padName = l.pad?.name || '';
+  const mission = l.mission?.name || l.name?.split('|')[0]?.trim() || l.name;
+  const desc = l.mission?.description || '';
+  const statusName = l.status?.abbrev || l.status?.name || '';
+  const isTBD = statusName === 'TBD' || statusName === 'TBC';
+
+  const dateStr = net.toLocaleDateString('en-US', { weekday: 'long', month: 'long', day: 'numeric', year: 'numeric' });
+  const timeStr = net.toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit', timeZoneName: 'short' });
+
+  let countdownHTML;
+  if (isTBD) {
+    countdownHTML = `<div class="hero-tbd">Date/Time To Be Determined</div>`;
+  } else {
+    countdownHTML = `
+      <div class="cd-row" id="cd-row">
+        <div class="cd-unit"><div class="cd-val" id="cd-d">--</div><div class="cd-lbl">Days</div></div>
+        <div class="cd-colon">:</div>
+        <div class="cd-unit"><div class="cd-val" id="cd-h">--</div><div class="cd-lbl">Hours</div></div>
+        <div class="cd-colon">:</div>
+        <div class="cd-unit"><div class="cd-val" id="cd-m">--</div><div class="cd-lbl">Min</div></div>
+        <div class="cd-colon">:</div>
+        <div class="cd-unit"><div class="cd-val" id="cd-s">--</div><div class="cd-lbl">Sec</div></div>
+      </div>`;
+  }
+
+  el.innerHTML = `
+    <div class="hero-tag">Next Cape Canaveral Launch</div>
+    <div class="hero-name">${escHtml(mission)}</div>
+    <div class="hero-meta">
+      <span class="chip hot">${escHtml(rocket)}</span>
+      <span class="chip">${escHtml(provider)}</span>
+      ${padName ? `<span class="chip">${escHtml(padName)}</span>` : ''}
+      <br>${dateStr}${!isTBD ? ` \u00b7 ${timeStr}` : ''}
+      ${statusName ? ` \u00b7 Status: ${escHtml(statusName)}` : ''}
     </div>
-    <div class="countdown-row" id="cd-row">
-      <div class="cd-unit"><div class="cd-val" id="cd-d">--</div><div class="cd-label">Days</div></div>
-      <div class="cd-sep">:</div>
-      <div class="cd-unit"><div class="cd-val" id="cd-h">--</div><div class="cd-label">Hours</div></div>
-      <div class="cd-sep">:</div>
-      <div class="cd-unit"><div class="cd-val" id="cd-m">--</div><div class="cd-label">Min</div></div>
-      <div class="cd-sep">:</div>
-      <div class="cd-unit"><div class="cd-val" id="cd-s">--</div><div class="cd-label">Sec</div></div>
-    </div>
-    <div class="hero-status"><span class="live-dot"></span>T-minus counting &bull; ${next.desc}</div>
+    ${countdownHTML}
+    ${desc ? `<div class="hero-desc">${escHtml(truncate(desc, 220))}</div>` : ''}
   `;
+  el.className = 'hero';
+
+  if (!isTBD) startCountdown(net);
+}
+
+function startCountdown(target) {
+  if (cdInterval) clearInterval(cdInterval);
 
   function tick() {
-    const t = timeDelta(next.date);
-    if (t.past) {
-      // Switch to next launch
-      renderHero();
-      renderList();
+    const diff = target - new Date();
+    if (diff <= 0) {
+      document.getElementById('cd-d').textContent = '00';
+      document.getElementById('cd-h').textContent = '00';
+      document.getElementById('cd-m').textContent = '00';
+      document.getElementById('cd-s').textContent = '00';
+      // Refresh data after launch time passes
+      setTimeout(() => fetchLaunches(), 60000);
+      clearInterval(cdInterval);
       return;
     }
-    document.getElementById('cd-d').textContent = pad(t.d);
-    document.getElementById('cd-h').textContent = pad(t.h);
-    document.getElementById('cd-m').textContent = pad(t.m);
-    document.getElementById('cd-s').textContent = pad(t.s);
+    const s = Math.floor(diff / 1000) % 60;
+    const m = Math.floor(diff / 60000) % 60;
+    const h = Math.floor(diff / 3600000) % 24;
+    const d = Math.floor(diff / 86400000);
+    document.getElementById('cd-d').textContent = String(d).padStart(2, '0');
+    document.getElementById('cd-h').textContent = String(h).padStart(2, '0');
+    document.getElementById('cd-m').textContent = String(m).padStart(2, '0');
+    document.getElementById('cd-s').textContent = String(s).padStart(2, '0');
   }
   tick();
-  clearInterval(window._cdInterval);
-  window._cdInterval = setInterval(tick, 1000);
+  cdInterval = setInterval(tick, 1000);
 }
 
 function renderList() {
-  const current = now();
-  const container = document.getElementById('launch-list');
-  const next = getNextLaunch();
+  const container = document.getElementById('list');
+  const countEl = document.getElementById('launch-count');
+  const now = new Date();
 
-  // Show future launches (skip ones already past if dated)
-  const future = launches.filter(l => {
-    if (!l.tbd) return l.date > current;
-    return true;
-  });
+  // Only show future launches
+  const future = launches.filter(l => new Date(l.net) > now || ['TBD','TBC'].includes(l.status?.abbrev));
 
-  container.innerHTML = future.map(l => {
-    const isNext = l === next;
-    const [monthStr, dayStr] = l.dateLabel.split(' ');
+  countEl.textContent = `${future.length} mission${future.length !== 1 ? 's' : ''}`;
+
+  if (future.length === 0) {
+    container.innerHTML = '<div class="err-msg">No upcoming launches in the manifest.</div>';
+    return;
+  }
+
+  container.innerHTML = future.map((l, i) => {
+    const net = new Date(l.net);
+    const isNext = l === nextLaunch;
+    const rocket = l.rocket?.configuration?.name || 'Unknown';
+    const provider = l.launch_service_provider?.name || '';
+    const padName = l.pad?.name || '';
+    const mission = l.mission?.name || l.name?.split('|')[0]?.trim() || l.name;
+    const desc = l.mission?.description || '';
+    const statusAbbrev = l.status?.abbrev || '';
+    const isTBD = statusAbbrev === 'TBD' || statusAbbrev === 'TBC';
+
+    const mo = net.toLocaleDateString('en-US', { month: 'short' }).toUpperCase();
+    const dy = net.getDate();
+    const tm = isTBD ? 'TBD' : net.toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit' });
+
     return `
-      <div class="launch-card${isNext ? ' is-next' : ''}">
-        <div class="lc-date">
-          <div class="month">${monthStr}</div>
-          ${dayStr ? `<div class="day">${dayStr}</div>` : `<div class="tbd">${monthStr.length <= 3 ? 'NET' : ''}</div>`}
-          ${l.time ? `<div class="time">${l.time}</div>` : `<div class="time">TBD</div>`}
+      <div class="card${isNext ? ' next' : ''}" style="animation-delay:${i * 0.05}s">
+        <div class="c-date">
+          <div class="mo">${mo}</div>
+          ${!isTBD ? `<div class="dy">${dy}</div>` : `<div class="tbd-marker">NET</div>`}
+          <div class="tm">${tm}</div>
         </div>
-        <div class="lc-info">
-          <div class="lc-mission">${l.mission}</div>
-          <div class="lc-desc">${l.desc}</div>
+        <div class="c-info">
+          <div class="c-name">${escHtml(mission)}</div>
+          <div class="c-desc">${escHtml(truncate(desc, 140))}</div>
         </div>
-        <div class="lc-rocket">
-          <div class="name">${l.rocket}</div>
-          <div class="pad">${l.pad}</div>
-          <div class="provider">${l.provider}</div>
+        <div class="c-rocket">
+          <div class="rk">${escHtml(rocket)}</div>
+          <div class="pad">${escHtml(padName)}</div>
+          <div class="prov">${escHtml(provider)}</div>
         </div>
-      </div>
-    `;
+      </div>`;
   }).join('');
 }
 
-// ── Starfield ──
-(function initStars() {
-  const canvas = document.getElementById('starfield');
-  const ctx = canvas.getContext('2d');
-  let w, h, stars = [];
+// ═══════════════════════════════════════════
+//  UTILS
+// ═══════════════════════════════════════════
+function escHtml(s) {
+  const d = document.createElement('div');
+  d.textContent = s || '';
+  return d.innerHTML;
+}
+function truncate(s, n) {
+  if (!s) return '';
+  return s.length > n ? s.slice(0, n).replace(/\s+\S*$/, '') + '...' : s;
+}
+
+// ═══════════════════════════════════════════
+//  STARFIELD
+// ═══════════════════════════════════════════
+(function() {
+  const c = document.getElementById('stars');
+  const ctx = c.getContext('2d');
+  let w, h, pts = [];
 
   function resize() {
-    w = canvas.width = window.innerWidth;
-    h = canvas.height = window.innerHeight;
+    w = c.width = innerWidth;
+    h = c.height = innerHeight;
   }
-
-  function createStars(count) {
-    stars = [];
-    for (let i = 0; i < count; i++) {
-      stars.push({
+  function init() {
+    pts = [];
+    for (let i = 0; i < 240; i++) {
+      pts.push({
         x: Math.random() * w,
         y: Math.random() * h,
-        r: Math.random() * 1.2 + 0.2,
-        a: Math.random() * 0.6 + 0.15,
-        speed: Math.random() * 0.0004 + 0.0001,
-        phase: Math.random() * Math.PI * 2
+        r: Math.random() * 1.1 + 0.15,
+        a: Math.random() * 0.5 + 0.1,
+        sp: Math.random() * 0.3 + 0.05,
+        ph: Math.random() * 6.28
       });
     }
   }
-
   function draw(t) {
     ctx.clearRect(0, 0, w, h);
-    for (const s of stars) {
-      const flicker = 0.5 + 0.5 * Math.sin(t * s.speed * 1000 + s.phase);
+    for (const p of pts) {
+      const fl = 0.5 + 0.5 * Math.sin(t * 0.001 * p.sp + p.ph);
       ctx.beginPath();
-      ctx.arc(s.x, s.y, s.r, 0, Math.PI * 2);
-      ctx.fillStyle = `rgba(200, 220, 255, ${s.a * flicker})`;
+      ctx.arc(p.x, p.y, p.r, 0, 6.28);
+      ctx.fillStyle = `rgba(180,210,255,${p.a * fl})`;
       ctx.fill();
     }
     requestAnimationFrame(draw);
   }
-
   resize();
-  createStars(280);
-  window.addEventListener('resize', () => { resize(); createStars(280); });
+  init();
+  addEventListener('resize', () => { resize(); init(); });
   requestAnimationFrame(draw);
 })();
 
-// ── Init ──
-renderHero();
-renderList();
+// ═══════════════════════════════════════════
+//  INIT
+// ═══════════════════════════════════════════
+fetchLaunches();
+setInterval(fetchLaunches, REFRESH_MS);
 </script>
 
 </body>
